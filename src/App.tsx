@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useParams} from "react-router-dom"
 
 function App() {
     const [message, setMessage] = useState('');
+    const { id } = useParams();
 
     useEffect(() => {
         fetch('http://localhost:4000/api/hello')
@@ -13,6 +15,7 @@ function App() {
         <div>
             <h1>REST App</h1>
             <p>{message}</p>
+            <p>{id}</p>
         </div>
     );
 }
