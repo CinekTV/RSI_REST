@@ -5,12 +5,12 @@ const app = express();
 const PORT = 4000;
 
 app.use(cors());
-app.use(express.json());
 
-app.get('/api/hello', (_req, res) => {
-    res.json({ message: 'Hello from REST API!' });
+app.get('/api/user/:id', (req, res) => {
+    const { id } = req.params;
+    res.json({ resource: 'user', id });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running at http://localhost:${PORT}`);
 });
