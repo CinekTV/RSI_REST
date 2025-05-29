@@ -1,65 +1,79 @@
-import {BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-function DynamicPage() {
-    const { resource, id } = useParams();
-    const [data, setData] = useState<{ resource: string; id: string } | null>(null);
+type User = {
+    id: number;
+    name: string;
+};
 
-    useEffect(() => {
-        if (resource && id) {
-            fetch(`http://localhost:4000/api/${resource}/${id}`)
-                .then(res => res.json())
-                .then(setData)
-                .catch(err => console.error('Fetch error:', err));
+function App() {
+    const [users, setUsers] = useState<User[]>([]);
+    const [name, setName] = useState('');
+
+    const API_URL = 'http://localhost:4000/api/users';
+
+    // GET
+    const fetchUsers = async () => {
+        const res = await axios.get<User[]>(API_URL);
+        setUsers(res.data);
+    };
+
+    // POST
+    const addUser = async () => {
+        if (!name.trim()) return;
+        const res = await axios.post<User>(API_URL, { name });
+        setUsers([...users, res.data]);
+        setName('');
+    };
+
+    // DELETE
+    const deleteUser = async (id: number) => {
+        await axios.delete(`${API_URL}/${id}`);
+        setUsers(users.filter((u) => u.id !== id));
+    };
+
+    // PUT
+    const updateUser = async (id: number) => {
+        const newName = prompt('Nowe imię:', 'Nowe Imię');
+        if (newName) {
+            const res = await axios.put(`${API_URL}/${id}`, { name: newName });
+            setUsers(users.map((u) => (u.id === id ? res.data : u)));
         }
-    }, [resource, id]);
-
-    return (
-        <>
-            <div style={{padding: '2rem'}}>
-                <h1>Ścieżka: /{resource}/{id}</h1>
-                <p><strong>Parametr 1:</strong> {resource}</p>
-                <p><strong>Parametr 2:</strong> {id}</p>
-                {data && (
-                    <div style={{marginTop: '1rem'}}>
-                        <h2>Dane z backendu:</h2>
-                        <pre>{JSON.stringify(data, null, 2)}</pre>
-                    </div>
-                )}
-            </div>
-        </>
-
-    );
-    }
-
-function XmlPage() {
-    const [xml, setXml] = useState<string>('');
+    };
 
     useEffect(() => {
-        fetch('http://localhost:4000/api/xml')
-            .then(res => res.text()) // XML = zwykły tekst
-            .then(setXml)
-            .catch(console.error);
+        fetchUsers();
     }, []);
 
+    type Product = { id: number, name: string, price: number };
+
+    const fetchProducts = async () => {
+        const response = await axios.get<Product[]>('http://localhost:4000/api/products');
+        console.log(response.data);
+    };
+    fetchProducts();
+
     return (
-        <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', padding: '1rem' }}>
-            <h1>Dane XML</h1>
-            <code>{xml}</code>
+        <div style={{ padding: 20 }}>
+            <h1>Użytkownicy</h1>
+            <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Imię"
+            />
+            <button onClick={addUser}>Dodaj</button>
+
+            <ul>
+                {users.map((user) => (
+                    <li key={user.id}>
+                        {user.name}{' '}
+                        <button onClick={() => updateUser(user.id)}>✏️ Edytuj</button>{' '}
+                        <button onClick={() => deleteUser(user.id)}>🗑️ Usuń</button>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
 
-    function App() {
-        return (
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/xml" element={<XmlPage />} />
-                    <Route path="/:resource/:id" element={<DynamicPage/>}/>
-                    <Route path="/" element={<h1>Strona główna</h1>}/>
-                </Routes>
-            </BrowserRouter>
-        );
-    }
-
-    export default App;
+export default App;
