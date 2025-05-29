@@ -38,8 +38,27 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+app.use((req, res, next) => {
+    const originalJson = res.json;
+    res.json = function (body: any) {
+        res.setHeader('x-custom-header', 'RSI-TS-Test');
+        return originalJson.call(this, body);
+    };
+    next();
+});
+
+
+
 type Product = { id: number, name: string, price: number };
 
+type Comment = {
+    id: number;
+    message: string;
+};
+
+const commentsMap: Record<number, Comment[]> = {
+    1: [{ id: 1, message: 'Bardzo fajny produkt!' }]
+};
 // const users: { id: number; name: string }[] = [];
 const products: Product[] = [
     {id: 1, name: "Laptop", price: 2000},
@@ -54,7 +73,29 @@ const  users = [
     { id: 2, name: 'Anna' }
 ];
 
-type ProductSearch = { name?: string, minPrice?: number };
+// type ProductSearch = {
+//     name?: string;
+//     minPrice?: number;
+// };
+
+app.get('/api/products/:id/comments', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const comments = commentsMap[productId] || [];
+    res.json(comments);
+});
+
+app.post('/api/products/:id/comments', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const { message } = req.body;
+    const newComment: Comment = {
+        id: Date.now(),
+        message
+    };
+    if (!commentsMap[productId]) commentsMap[productId] = [];
+    commentsMap[productId].push(newComment);
+    res.status(201).json(newComment);
+});
+
 
 app.post('/api/products/search', (req, res) => {
     const { name, minPrice } = req.body;
@@ -64,6 +105,29 @@ app.post('/api/products/search', (req, res) => {
     );
     res.json(results);
 });
+
+app.get('/api/products/search', (req, res) => {
+    const { name, minPrice } = req.query;
+
+    // Parsujemy minPrice do liczby (bo query param to string!)
+    const min = minPrice ? parseFloat(minPrice as string) : undefined;
+
+    // Filtrowanie
+    let filtered = products;
+
+    if (name) {
+        filtered = filtered.filter(p =>
+            p.name.toLowerCase().includes((name as string).toLowerCase())
+        );
+    }
+
+    if (!isNaN(min as number)) {
+        filtered = filtered.filter(p => p.price >= (min as number));
+    }
+
+    res.json(filtered);
+});
+
 
 
 
