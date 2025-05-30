@@ -27,7 +27,6 @@ const swaggerSpec = swaggerJsDoc({
     apis: ['./server.ts'], // 👈 tutaj możesz też dać inne pliki z endpointami
 });
 
-// 👉 Endpoint z dokumentacją
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
