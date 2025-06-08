@@ -59,6 +59,7 @@ app.use((req, res, next) => {
     next();
 
 });
+
 //autoryzacja
 app.use((req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
@@ -247,24 +248,24 @@ app.get('/api/users/:id', (req, res) => {
 });
 
 
-// app.post('/api/products/:id/comments', (req, res) => {
-//     const productId = parseInt(req.params.id);
-//     const { message } = req.body;
-//
-//     const newComment: Comment = {
-//         id: Date.now(),
-//         message
-//     };
-//
-//     if (!commentsMap[productId]) commentsMap[productId] = [];
-//     commentsMap[productId].push(newComment);
-//
-//     const location = `http://localhost:${PORT}/api/products/${productId}/comments/${newComment.id}`;
-//     res.setHeader('Location', location);
-//     console.log('Location set to:', location);
-//
-//     res.status(201).json(newComment);
-// });
+app.post('/api/products/:id/comments', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const { message } = req.body;
+
+    const newComment: Comment = {
+        id: Date.now(),
+        message
+    };
+
+    if (!commentsMap[productId]) commentsMap[productId] = [];
+    commentsMap[productId].push(newComment);
+
+    const location = `http://localhost:${PORT}/api/products/${productId}/comments/${newComment.id}`;
+    res.setHeader('Location', location);
+    console.log('Location set to:', location);
+
+    res.status(201).json(newComment);
+});
 app.post('/api/products/:id/comments', (req, res) => {
     const productId = parseInt(req.params.id);
     const { message } = req.body;
